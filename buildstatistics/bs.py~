@@ -12,8 +12,16 @@ os.environ['CIMS_CONFIG_PATH'] = '/proj/tecsomaten/etc'
 sys.path.append('/proj/tecsomaten/lib')
 import pycims.cimsapi
 
-idlist = [76122,76250,76294,76311]
+idlist = [77697,77890,77978,78049,78198,78199,78466,78500,78671,78762,78837,79495,\
+79529,79636,79761,79785,79880,79927,79954,80001,80052,80096,80195,80230,80279,80584,80601,80637,80721,\
+80785,80858,80894,80900,80918,80943,80958,81000,81064,81085,81128,81209,81254,81366,81384,81399,81438,\
+81471,81576,81827,82114,82234,82328,82384,82437,82508,82567,82571,82614,82721,82900,82906,82986,83199,\
+83285,83314,83324,83449,83543,83571,83650,83702,83741,83814,83887,84008,84013,84355,84422]
 
+idlisttest = [83235,83314]
+idlist10 = [83285,83314,83324,83449,83543,\
+              83571,83650,83702,83741,83814,\
+              83887,84008,84013,84355,84422]
 class RegressionResult(object):
     def __init__(self, reg_id):
         self.failed_tcs = []
@@ -42,7 +50,8 @@ class RegressionResult(object):
                 try:
                     for tc in ts['children']:
                         tc_obj = TestCaseResult(tc, ts['name'], self.reg_id, c['name'])
-                        self.test_cases[tc_obj.name] = tc_obj
+                        tc_n = tc_obj.name+'.'+c['name']
+                        self.test_cases[tc_n] = tc_obj
                         if not tc_obj.passed:
                             self.failed_tcs.append(tc_obj)
                 except KeyError:
@@ -149,12 +158,6 @@ class TestCaseResult(object):
         xml_rep.append(reason)
         return xml_rep
 
-def get_base_result():
-    # Hardcode to get job id 77697, which is build on 2014-11-15,R45a47 
-	result = RegressionResult(77697)
-	case_record = result.get_all_cases()
-	case_record.keys()
-
 def get_fail_result(ids):
     results = []
     for id in ids:
@@ -174,6 +177,8 @@ def insert(name,miss_list):
 	if name not in miss_list:
 		miss_list.append(name)
 	return miss_list
+def add_config(obj):
+    return obj.name+'.'+obj.config
 
 def main():
     base = RegressionResult(77697)
@@ -182,26 +187,34 @@ def main():
     latest_case = latest.get_all_cases()
     # Read job list from file
     # ids = parse_job_id() 
-    fail_record = get_fail_result(idlist)
+    #fail_record = get_fail_result(idlist) 
+    tmp_fail_record = get_fail_result(idlisttest)
+    fail_record = map(add_config, tmp_fail_record)
     coast = 0
     miss_list = []
+    all_miss_list = []
     for f in fail_record:
         if f.name in base_case.keys():
             coast = coast+1
         else:
             insert(f.name, miss_list)
-            print '*'*100
-            print f.name
+            all_miss_list.append(f.name)
             continue
-    
+    for f in miss_list:
+        print '*'*100
+	print f
+	print all_miss_list.count(f)
+
     print '*'*100    
-    print 'success_record is = %s'%coast
+    print 'legacy_record  is = %s'%coast
     length = len(fail_record)
     lengthb = len(base_case.keys())
     lengthl = len(latest_case.keys())
+    lengthm = len(miss_list)
     print 'fail_record    is = %s'%length
     print 'base lenght    is = %s'%lengthb
     print 'latest lenghl  is = %s'%lengthl
+    print 'miss  lenghl   is = %s'%lengthm
     print miss_list
     
     return coast 
