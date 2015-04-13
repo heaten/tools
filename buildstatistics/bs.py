@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 import argparse
+import pickle
 
 from lxml import etree
 from Levenshtein import ratio
@@ -167,60 +168,122 @@ def get_fail_result(ids):
 	results.extend(result.failed_tcs)
     return results
 
-def parse_job_id():
-	f = open('joblist.log','r')
-	joblist = f.readlines()
-	for j in joblist:
-		print j, 
-	return joblist
-
 def insert(name,miss_list):
 	if name not in miss_list:
 		miss_list.append(name)
 	return miss_list
+
 def add_config(obj):
     return obj.name+'.'+obj.config
 
-def main():
-    idport = downloadResults()
-    print idport
-    base = RegressionResult(idport[0])
-    latest = RegressionResult(idport[-1])
-    base_case = base.get_all_cases()
-    latest_case = latest.get_all_cases()
-    # Read job list from file
-    # ids = parse_job_id() 
-    #fail_record = get_fail_result(idlist)
-    tmp_fail_record = get_fail_result(idport)
-    fail_record = map(add_config, tmp_fail_record)
-    coast = 0
+def main1():
+    #Init data
+    const = 0
     miss_list = []
     all_miss_list = []
+
+    # Get GTT NG regression job id list from Portal
+    id_list = downloadResults('2014-11-15 08:00:00','2014-12-30 08:00:00')
+    print id_list
+
+    # Get Case number 
+    base = RegressionResult(id_list[0])
+    latest = RegressionResult(id_list[-1])
+    base_case = base.get_all_cases()
+    latest_case = latest.get_all_cases()
+    lengthb = len(base_case.keys())
+    lengthl = len(latest_case.keys())
+       
+    #Merge failure case list  
+    #fail_record = get_fail_result(idlist)
+    tmp_fail_record = get_fail_result(id_list)
+    
+    #Add config into keys
+    fail_record = map(add_config, tmp_fail_record)
+    length = len(fail_record)
+
+    # Find the failure case which is new added 
     for f in fail_record:
         if f in base_case.keys():
-            coast = coast+1
+            const = const+1
         else:
             insert(f, miss_list)
             all_miss_list.append(f)
-            continue
+            continue    
+    lengthm = len(miss_list)
+
+    #Now start to print statistic
     for m in miss_list:
         print '*'*100
 	print m
 	print all_miss_list.count(m)
-
+    
     print '*'*100    
-    print 'legacy_record  is = %s'%coast
-    length = len(fail_record)
-    lengthb = len(base_case.keys())
-    lengthl = len(latest_case.keys())
-    lengthm = len(miss_list)
-    print 'fail_record    is = %s'%length
-    print 'base lenght    is = %s'%lengthb
-    print 'latest lenghl  is = %s'%lengthl
-    print 'miss  lenghl   is = %s'%lengthm
+    print 'Base case number is       = %s'%lengthb
+    print 'Latest case number  is    = %s'%lengthl
+    print 'New added case number  is = %s'%(lengthl-lengthb)
+    print '*'*100
+    print 'Total failure case number is     = %s'%length
+    print 'Legacy failure case number is    = %s'%const
+    print 'New added failure case number is = %s'%lengthm
+    print '*'*100
     print miss_list
     
-    return coast 
+    return const
+
+def write_all_results(id_list):
+    weekn = 1
+    for i in id_list:
+        tmp_fail_record = get_fail_result(i)
+        fail_record = map(add_config, tmp_fail_record)
+        filename ='w'+'%s'%weekn+'.txt' 
+        ft = open(filename,'w')
+        pickle.dump(fail_record,ft)
+        ft.close()
+        weekn= weekn+1
+
+def main():
+    w1 = downloadResults('2014-11-03 00:00:00','2014-11-09 24:00:00') 
+    w2 = downloadResults('2014-11-10 00:00:00','2014-11-16 24:00:00')
+    w3 = downloadResults('2014-11-17 00:00:00','2014-11-23 24:00:00')
+    w4 = downloadResults('2014-11-24 00:00:00','2014-11-30 24:00:00')
+    
+    w5 = downloadResults('2014-12-01 00:00:00','2014-12-07 24:00:00')
+    w6 = downloadResults('2014-12-08 00:00:00','2014-12-14 24:00:00')
+    w7 = downloadResults('2014-12-15 00:00:00','2014-12-21 24:00:00')
+    w8 = downloadResults('2014-12-22 00:00:00','2014-12-28 24:00:00')
+    w9 = downloadResults('2014-12-29 00:00:00','2015-01-04 24:00:00')
+    
+    w10 = downloadResults('2015-01-05 00:00:00','2015-01-11 24:00:00') 
+    w11 = downloadResults('2015-01-12 00:00:00','2015-01-18 24:00:00')
+    w12 = downloadResults('2015-01-19 00:00:00','2015-01-25 24:00:00')
+    w13 = downloadResults('2015-01-26 00:00:00','2015-02-01 24:00:00')
+    
+    w14 = downloadResults('2015-02-02 00:00:00','2015-02-08 24:00:00')
+    w15 = downloadResults('2015-02-09 00:00:00','2015-02-15 24:00:00') 
+    w16 = downloadResults('2015-02-16 00:00:00','2015-02-22 24:00:00')
+    w17 = downloadResults('2015-02-23 00:00:00','2015-03-01 24:00:00')
+    w18 = downloadResults('2015-03-02 00:00:00','2015-03-08 24:00:00')
+    w19 = downloadResults('2015-03-09 00:00:00','2015-03-15 24:00:00')
+    w20 = downloadResults('2015-03-16 00:00:00','2015-03-22 24:00:00')
+    w21 = downloadResults('2015-03-23 00:00:00','2015-03-29 24:00:00')
+    w22 = downloadResults('2015-03-30 00:00:00','2015-04-05 24:00:00')
+    w23 = downloadResults('2015-04-06 00:00:00','2015-04-12 24:00:00')
+    w24 = downloadResults('2015-04-13 00:00:00','2015-04-19 24:00:00')
+    id_list = [w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,w16,w17,w18,w19,w20,w21,w22,w23,w24]
+    for w in id_list:
+        print w
+
+    #write_all_results(id_list)
+    write_delta_results(23,w23)
+    
+def write_delta_results(weekn,week):    
+    tmp_fail_record = get_fail_result(week)
+    fail_record = map(add_config, tmp_fail_record)
+    filename ='w'+'%s'%weekn+'.txt' 
+    ft = open(filename,'w')
+    pickle.dump(fail_record,ft)
+    ft.close()
 
 if __name__ == "__main__":
 	main()

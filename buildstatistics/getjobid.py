@@ -15,14 +15,14 @@ event_api = cims.CimsApi('event')
 build_api = cims.CimsApi('build')
 
 # PORTAL STUFF
-def downloadResults(branchname = 'ndpgsn_5_0_lsv_001'):
+def downloadResults(startday,endday,branchname = 'ndpgsn_5_0_lsv_001'):
     result = []
     job_types = ['test_gttonnextgen']
     for job_type in job_types:
         job_ids = testqueue_api.getListOfJobIds(product = branchname,
                                                 job_type = job_type,
-                                                start = '2014-11-15 08:00:00',
-                                                end = '2014-12-15 08:00:00',
+                                                start = startday,
+                                                end = endday,
                                                 filters = {})['data']
     return job_ids 
 
