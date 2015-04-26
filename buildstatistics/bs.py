@@ -4,6 +4,8 @@ import sys
 import logging
 import argparse
 import pickle
+import time
+import datetime
 
 from lxml import etree
 from Levenshtein import ratio
@@ -150,13 +152,44 @@ class TestCaseResult(object):
         xml_rep.append(reason)
         return xml_rep
 
+class BuildResult(object):
+    def __init__(self,id,number):
+        self.id = id
+        self.number = number
+
 def get_fail_result(ids):
     results = []
     for id in ids:
 	print 'Now start to get fail case,id is = %s'%id
 	result = RegressionResult(id)
 	results.extend(result.failed_tcs)
+
     return results
+
+
+def get_fail_number(ids):
+    print ids
+    flist = []
+    for id in ids:
+        namelist = []
+        print 'Now start to get fail number, id is %s'%id
+        result = RegressionResult(id)     
+        for i in result.failed_tcs:
+            namelist.append(i.name)
+        
+        #remove the caes wit same config
+        nset = set(namelist)
+        rlist = list(nset)
+        
+        #Summrize reuslt for each build
+        build = BuildResult(id,len(rlist))
+
+        # List result
+        flist.append(build)
+        print build.id
+        print build.number
+    return flist
+
 
 def insert(name,miss_list):
 	if name not in miss_list:
@@ -165,61 +198,6 @@ def insert(name,miss_list):
 
 def add_config(obj):
     return obj.name+'.'+obj.config
-
-def main1():
-    #Init data
-    const = 0
-    miss_list = []
-    all_miss_list = []
-
-    # Get GTT NG regression job id list from Portal
-    id_list = downloadResults('2014-11-15 08:00:00','2014-12-30 08:00:00')
-    print id_list
-
-    # Get Case number 
-    base = RegressionResult(id_list[0])
-    latest = RegressionResult(id_list[-1])
-    base_case = base.get_all_cases()
-    latest_case = latest.get_all_cases()
-    lengthb = len(base_case.keys())
-    lengthl = len(latest_case.keys())
-       
-    #Merge failure case list  
-    #fail_record = get_fail_result(idlist)
-    tmp_fail_record = get_fail_result(id_list)
-    
-    #Add config into keys
-    fail_record = map(add_config, tmp_fail_record)
-    length = len(fail_record)
-
-    # Find the failure case which is new added 
-    for f in fail_record:
-        if f in base_case.keys():
-            const = const+1
-        else:
-            insert(f, miss_list)
-            all_miss_list.append(f)
-            continue    
-    lengthm = len(miss_list)
-
-    #Now start to print statistic
-    for m in miss_list:
-        print '*'*100
-	print m
-	print all_miss_list.count(m)
-    
-    print '*'*100    
-    print 'Base case number is       = %s'%lengthb
-    print 'Latest case number  is    = %s'%lengthl
-    print 'New added case number  is = %s'%(lengthl-lengthb)
-    print '*'*100
-    print 'Total failure case number is     = %s'%length
-    print 'Legacy failure case number is    = %s'%const
-    print 'New added failure case number is = %s'%lengthm
-    print '*'*100
-    print miss_list
-    
-    return const
 
 def write_all_results(id_list):
     weekn = 1
@@ -263,16 +241,18 @@ def main():
     w23 = downloadResults('2015-04-06 00:00:00','2015-04-12 24:00:00')
     w24 = downloadResults('2015-04-13 00:00:00','2015-04-19 24:00:00')
     w25 = downloadResults('2015-04-20 00:00:00','2015-04-26 24:00:00')
-    w26 = downloadResults('2015-04-27 00:00:00','2015-05-26 24:00:00')
+    w26 = downloadResults('2015-04-27 00:00:00','2015-05-03 24:00:00')
 
     
-    id_list = [w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,w16,w17,w18,w19,w20,w21,w22,w23,w24]
-    for w in id_list:
-        print w
+    id_list = [w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,w16,w17,w18,w19,w20,w21,w22,w23,w24,w25]
+   
+    print id_list[-1]
 
     #write_all_results(id_list)
-    write_delta_results(23,w23)
-    
+    #write_delta_results(25,w25)
+    write_daily_data()
+
+
 def write_delta_results(weekn,week):    
     tmp_fail_record = get_fail_result(week)
     fail_record = map(add_config, tmp_fail_record)
@@ -280,6 +260,37 @@ def write_delta_results(weekn,week):
     ft = open(filename,'w')
     pickle.dump(fail_record,ft)
     ft.close()
+
+def write_daily_data():
+    # get job id for yesterday
+    timeslot = get_timeslot()
+    jobidlist = downloadResults(timeslot[0],timeslot[1])
+    buildresult = get_fail_number(jobidlist)
+
+    #Read old data
+    filename = 'FailNumber.txt'
+    ft = open(filename,'r')
+    data = pickle.load(ft)
+    ft.close()
+
+    #Add new data
+    ft = open(filename,'w')
+    new = data+buildresult
+    pickle.dump(new,ft)
+    ft.close()
+
+def get_timeslot():
+    #today = time.strftime("%Y-%m-%d %X",time.localtime())
+    today = datetime.datetime.now()
+    y = today - datetime.timedelta(days=1)
+    
+    yesterday = time.strftime("%Y-%m-%d %X",y.timetuple())
+
+    begin = yesterday[:11]+'00:00:00'
+    end = yesterday[:11]+'24:00:00'
+    print begin
+    print end
+    return [begin,end]
 
 if __name__ == "__main__":
 	main()

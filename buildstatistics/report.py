@@ -2,10 +2,11 @@
 import os
 import sys
 import pickle
-
+import bs
+from bs import BuildResult
 
 x = 1
-weekn = 23
+weekn = 26
 
 def read_data(weeklist):
     list = []
@@ -19,6 +20,7 @@ def read_data(weeklist):
 
 def analysis_list(delta_l,raw_l):
     sum = 0
+    total =0
     for d in delta_l:
         times = raw_l.count(d)
         if times > x:
@@ -26,27 +28,55 @@ def analysis_list(delta_l,raw_l):
             print d
             print 'Failure time is %s'%times
             sum= sum+1
-    print sum        
+            total = total + times
+    print 'The number of new unstable case is %s'%sum        
+    print 'The total failure time for new case  is %s'%total        
 
-def main():
+def daily_report():
+    filename = 'FailNumber.txt'    
+    ft = open(filename,'r')
+    data = pickle.load(ft)
+    ft.close()
+    list =[]
+    for d in data:
+        print d.id
+        print d.number
+        list.append(d.number)
+    list.sort(key = int)
+    print list
+
+def weekly_report():
     # Read the legacy record
-    oldlist = read_data([18,19,20,22])
+    oldlist = read_data([20,22,23,24])
     # Read the latest record
-    newlist = read_data([weekn])
+    newlist = read_data([25])
     
     # Remove duplicated case
     oldset = set(oldlist)
     newset = set(newlist)
-    print len(oldset)
-    print len(newset)
+    print ('Total failure times for last 4 weeks',':',len(oldlist))
+    print ('Total failure times for this week',':',len(newlist))
+    print ('Number of last 4 weeks',':',len(oldset))
+    print ('Number of this week',':',len(newset))
     
     # Get the new failed case set
     delta = newset - oldset
     #print delta
-    print len(delta)
+    print ('Number of new unstable case',':',len(delta))
     
     # Print details info
-    analysis_list(list(delta),list(newlist))
+    dlist = list(delta)
+
+    # Get delta data
+    analysis_list(sorted(dlist),newlist)
+
+    # get whole data 
+    #olist = list(newset)
+    #analysis_list(sorted(olist),newlist)
+
+def main():
+    weekly_report()
+    #daily_report()
 
 if __name__ == "__main__":
     main()
