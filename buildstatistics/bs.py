@@ -1,20 +1,21 @@
-#! /usr/bin/env python2.7
+#!/proj/sgsn-tools/wh/bin/sgenv python
+
 import os
 import sys
 import logging
-import argparse
 import pickle
 import time
 import datetime
+import argparse
 
-from lxml import etree
-from Levenshtein import ratio
 from collections import defaultdict
 from getjobid import downloadResults
 
 os.environ['CIMS_CONFIG_PATH'] = '/proj/tecsomaten/etc'
 sys.path.append('/proj/tecsomaten/lib')
 import pycims.cimsapi
+
+path = '/home/ewwglli/tools/buildstatistics/'
 
 class RegressionResult(object):
     def __init__(self, reg_id):
@@ -211,46 +212,20 @@ def write_all_results(id_list):
         weekn= weekn+1
 
 def main():
-    w1 = downloadResults('2014-11-03 00:00:00','2014-11-09 24:00:00') 
-    w2 = downloadResults('2014-11-10 00:00:00','2014-11-16 24:00:00')
-    w3 = downloadResults('2014-11-17 00:00:00','2014-11-23 24:00:00')
-    w4 = downloadResults('2014-11-24 00:00:00','2014-11-30 24:00:00')
-    
-    w5 = downloadResults('2014-12-01 00:00:00','2014-12-07 24:00:00')
-    w6 = downloadResults('2014-12-08 00:00:00','2014-12-14 24:00:00')
-    w7 = downloadResults('2014-12-15 00:00:00','2014-12-21 24:00:00')
-    w8 = downloadResults('2014-12-22 00:00:00','2014-12-28 24:00:00')
-    w9 = downloadResults('2014-12-29 00:00:00','2015-01-04 24:00:00')
-    
-    w10 = downloadResults('2015-01-05 00:00:00','2015-01-11 24:00:00') 
-    w11 = downloadResults('2015-01-12 00:00:00','2015-01-18 24:00:00')
-    w12 = downloadResults('2015-01-19 00:00:00','2015-01-25 24:00:00')
-    w13 = downloadResults('2015-01-26 00:00:00','2015-02-01 24:00:00')
-    
-    w14 = downloadResults('2015-02-02 00:00:00','2015-02-08 24:00:00')
-    w15 = downloadResults('2015-02-09 00:00:00','2015-02-15 24:00:00') 
-    w16 = downloadResults('2015-02-16 00:00:00','2015-02-22 24:00:00')
-    w17 = downloadResults('2015-02-23 00:00:00','2015-03-01 24:00:00')
-    
-    w18 = downloadResults('2015-03-02 00:00:00','2015-03-08 24:00:00')
-    w19 = downloadResults('2015-03-09 00:00:00','2015-03-15 24:00:00')
-    w20 = downloadResults('2015-03-16 00:00:00','2015-03-22 24:00:00')
-    w21 = downloadResults('2015-03-23 00:00:00','2015-03-29 24:00:00') #bad boy
-    
-    w22 = downloadResults('2015-03-30 00:00:00','2015-04-05 24:00:00')
-    w23 = downloadResults('2015-04-06 00:00:00','2015-04-12 24:00:00')
-    w24 = downloadResults('2015-04-13 00:00:00','2015-04-19 24:00:00')
-    w25 = downloadResults('2015-04-20 00:00:00','2015-04-26 24:00:00')
-    w26 = downloadResults('2015-04-27 00:00:00','2015-05-03 24:00:00')
+    parser = argparse.ArgumentParser(description='Hunting unstable cases.')
+    parser.add_argument('--model', help='Get daily average data, or get weekly inflow data')
+    args = parser.parse_args() 
+     
+    w27 = downloadResults('2015-05-04 00:00:00','2015-05-10 24:00:00')
+    w28 = downloadResults('2015-05-11 00:00:00','2015-05-17 24:00:00')
 
-    
-    id_list = [w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,w16,w17,w18,w19,w20,w21,w22,w23,w24,w25]
-   
-    print id_list[-1]
+    if args.model == 'd':
+        write_daily_data()
+    else:
+        print w27
+        write_delta_results(27,w27)
 
     #write_all_results(id_list)
-    #write_delta_results(25,w25)
-    write_daily_data()
 
 
 def write_delta_results(weekn,week):    
@@ -269,12 +244,12 @@ def write_daily_data():
 
     #Read old data
     filename = 'FailNumber.txt'
-    ft = open(filename,'r')
+    ft = open(path+filename,'r')
     data = pickle.load(ft)
     ft.close()
 
     #Add new data
-    ft = open(filename,'w')
+    ft = open(path+filename,'w')
     new = data+buildresult
     pickle.dump(new,ft)
     ft.close()
