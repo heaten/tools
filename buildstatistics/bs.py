@@ -23,7 +23,6 @@ class RegressionResult(object):
         self.test_cases = dict()
         self.reg_id = reg_id
         self.get_results()
-    
     def get_failed_tests_with_tr(self):
         sgsn_api = pycims.cimsapi.CimsApi('sgsnexternal')
         testcases = sgsn_api.getFailedCasesByJobId(jobId=self.reg_id, withTR=True)
@@ -37,24 +36,28 @@ class RegressionResult(object):
         except Exception, e:
             logging.error('getting results failed: %s', str(e))
             sys.exit(str(e))
-        configs = data['tree'][0]['children'] 
-        for c in configs:
-            logging.debug('found configuration: %s', c['name'])
-            suites = c['children']
-            for ts in suites:
-                try:
-                    for tc in ts['children']:
-                        tc_obj = TestCaseResult(tc, ts['name'], self.reg_id, c['name'])
-                        tc_n = tc_obj.name+'.'+tc_obj.config
-                        self.test_cases[tc_n] = tc_obj
-                        if not tc_obj.passed:
-                            self.failed_tcs.append(tc_obj)
-                except KeyError:
+        try:
+            configs = data['tree'][0]['children'] 
+            for c in configs:
+                logging.debug('found configuration: %s', c['name'])
+                suites = c['children']
+                for ts in suites:
+                    try:
+                        for tc in ts['children']:
+                            tc_obj = TestCaseResult(tc, ts['name'], self.reg_id, c['name'])
+                            tc_n = tc_obj.name+'.'+tc_obj.config
+                            self.test_cases[tc_n] = tc_obj
+                            if not tc_obj.passed:
+                                self.failed_tcs.append(tc_obj)
+                    except KeyError:
                     # The test suite didn't have any children
                     # i.e. the suite contained no tests that 
                     # were executed
-                    logging.debug('no tests in suite')
-                    continue
+                        logging.debug('no tests in suite')
+                        continue
+        except KeyError:
+            print self.reg_id
+            print 'Key Error'
 
     def get_all_cases(self):
         return self.test_cases
@@ -163,17 +166,17 @@ def get_fail_result(ids):
     for id in ids:
 	print 'Now start to get fail case,id is = %s'%id
 	result = RegressionResult(id)
-	results.extend(result.failed_tcs)
+        results.extend(result.failed_tcs)
 
     return results
 
 
 def get_fail_number(ids):
-    print ids
+    #print ids
     flist = []
     for id in ids:
         namelist = []
-        print 'Now start to get fail number, id is %s'%id
+        #print 'Now start to get fail number, id is %s'%id
         result = RegressionResult(id)     
         for i in result.failed_tcs:
             namelist.append(i.name)
@@ -187,8 +190,8 @@ def get_fail_number(ids):
 
         # List result
         flist.append(build)
-        print build.id
-        print build.number
+        #print build.id
+        #print build.number
     return flist
 
 
@@ -216,17 +219,32 @@ def main():
     parser.add_argument('--model', help='Get daily average data, or get weekly inflow data')
     args = parser.parse_args() 
      
-    w27 = downloadResults('2015-05-04 00:00:00','2015-05-10 24:00:00')
-    w28 = downloadResults('2015-05-11 00:00:00','2015-05-17 24:00:00')
+    w33 = downloadResults('2015-06-15 00:00:00','2015-06-21 24:00:00')
 
     if args.model == 'd':
         write_daily_data()
+    elif args.model == 'c':
+        write_compare_data(96306,111507)
     else:
-        print w27
-        write_delta_results(27,w27)
+        print w33
+        write_delta_results(33,w33)
 
     #write_all_results(id_list)
 
+def write_compare_data(startid,endid):
+    start = RegressionResult(startid)
+    end = RegressionResult(endid)
+    casea = start.get_all_cases()
+    caseb = end.get_all_cases()
+    a = set(casea)
+    b = set(caseb)
+    delta = b-a
+    print delta
+    listd = list(delta)
+    print len(listd)
+    ft = open('newcase301_525.txt','w')
+    pickle.dump(listd,ft)
+    ft.close()
 
 def write_delta_results(weekn,week):    
     tmp_fail_record = get_fail_result(week)
@@ -255,7 +273,6 @@ def write_daily_data():
     ft.close()
 
 def get_timeslot():
-    #today = time.strftime("%Y-%m-%d %X",time.localtime())
     today = datetime.datetime.now()
     y = today - datetime.timedelta(days=1)
     
@@ -263,8 +280,8 @@ def get_timeslot():
 
     begin = yesterday[:11]+'00:00:00'
     end = yesterday[:11]+'24:00:00'
-    print begin
-    print end
+    ##print begin
+    ##print end
     return [begin,end]
 
 if __name__ == "__main__":
