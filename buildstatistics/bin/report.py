@@ -4,6 +4,7 @@ import sys
 import pickle
 import argparse
 import collections
+import pdb
 from fetchdata import fetch_data
 
 #Globe
@@ -72,10 +73,10 @@ def daily_report():
 
 def weekly_report():
     # Read the legacy record
-    oldlist = read_data([29,30,31,32])
+    oldlist = read_data([34,35,36,37])
     # Read the latest record
-    newlist = read_data([33])
-    
+    newlist = read_data([38])
+    pdb.set_trace() 
     # Remove duplicated case
     oldset = set(oldlist)
     newset = set(newlist)
