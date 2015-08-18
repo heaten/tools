@@ -1,0 +1,24 @@
+('Total failure times for last 4 weeks', ':', 3896)
+('Total failure times for this week', ':', 378)
+('Number of last 4 weeks', ':', 2142)
+('Number of this week', ':', 332)
+('Number of new unstable case', ':', 241)
+Start to use class counter
+tc_368_006_pgw_reselection_dbr_other_pdn_wf_service_request.LWG                                                                   :    2
+The number of new unstable case is 1
+===================================================================================================================
+tc_019_001_feIfShow_rt.LWG                                                                                                        :    5
+tc_307_011_HSS_Init_QoS_Modification__UEAMBR_and_APNAMBR_Changed_ECM_IDLE.LWG                                                     :    4
+tc_307_011_HSS_Init_QoS_Modification__UEAMBR_and_APNAMBR_Changed_ECM_IDLE.L15acp01                                                :    4
+tc_307_011_HSS_Init_QoS_Modification__UEAMBR_and_APNAMBR_Changed_ECM_IDLE.LW14b                                                   :    4
+tc_262_600_combined_attach_cs_service_notification_when_emm_attach_state.LW14b                                                    :    3
+tc_107_001_eth_port_cli_mand_vals.LWG                                                                                             :    3
+tc_313_238_inter_new_srns_reloc_s16_with_sgw_change_iu_release_request_none_user_inactivity_received_wf_forward_reloc_complete_ack.LW14b:    3
+tc_357_023_gsm_iterator_move_ra_from_one_area_to_another.LWG                                                                      :    3
+tc_260_272_receive_sm_stop_req_while_wf_setup_iteration.LWG                                                                       :    3
+tc_304_213_isc_control_mode_threshold_exceeded_wf_session_response_reject.LW14b                                                   :    3
+tc_119_202_ospf_interface_opt_vals.LWG                                                                                            :    3
+tc_216_106_icmpv6_outNeighborSol.LWG                                                                                              :    2
+tc_110_005_inbound_outbound_pf_rule_cli_ip.LWG                                                                                    :    2
+tc_107_101_eth_vlan_cli.LWG                                                                                                       :    2
+tc_262_600_combined_attach_cs_service_notification_when_emm_attach_state.L15acp01                                                 :    2
