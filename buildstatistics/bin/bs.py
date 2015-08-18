@@ -219,15 +219,15 @@ def main():
     parser.add_argument('--model', help='Get daily average data, or get weekly inflow data')
     args = parser.parse_args() 
      
-    w33 = downloadResults('2015-06-15 00:00:00','2015-06-21 24:00:00')
+    w38 = downloadResults('2015-07-20 00:00:00','2015-07-26 24:00:00')
 
     if args.model == 'd':
         write_daily_data()
     elif args.model == 'c':
         write_compare_data(96306,111507)
     else:
-        print w33
-        write_delta_results(33,w33)
+        print w38
+        write_delta_results(38,w38)
 
     #write_all_results(id_list)
 
@@ -250,7 +250,7 @@ def write_delta_results(weekn,week):
     tmp_fail_record = get_fail_result(week)
     fail_record = map(add_config, tmp_fail_record)
     filename ='w'+'%s'%weekn+'.txt' 
-    ft = open(filename,'w')
+    ft = open(path+filename,'w')
     pickle.dump(fail_record,ft)
     ft.close()
 
