@@ -5,6 +5,7 @@
 " Pep8 - http://pypi.python.org/pypi/pep8
 " Pyflakes
 " Ack
+" Rake & Ruby for command-t
 " nose, django-nose
 
 " ==========================================================
@@ -112,9 +113,8 @@ imap <C-W> <C-O><C-W>
 " Open NerdTree
 map <leader>n :NERDTreeToggle<CR>
 
-map <leader>f :CtrlP<CR>
-map <leader>b :CtrlPBuffer<CR>
-
+" Run command-t file search
+map <leader>f :CommandT<CR>
 " Ack searching
 nmap <leader>a <Esc>:Ack!
 
@@ -131,8 +131,6 @@ map <leader>r :RopeRename<CR>
 " ==========================================================
 " Load pathogen with docs for all plugins
 filetype off
-call pathogen#runtime_append_all_bundles()
-call pathogen#helptags()
 
 " ==========================================================
 " Basic Settings
@@ -174,7 +172,6 @@ set pumheight=6             " Keep a small completion window
 
 """ Moving Around/Editing
 set cursorline              " have a line indicate the cursor location
-set cursorcolumn            " have a line indicate the cursor location
 set ruler                   " show the cursor position all the time
 set nostartofline           " Avoid moving cursor to BOL when jumping around
 set virtualedit=block       " Let cursor move past the last char in <C-v> mode
@@ -191,8 +188,7 @@ set softtabstop=4           " <BS> over an autoindent deletes both spaces.
 set expandtab               " Use spaces, not tabs, for autoindent/tab key.
 set shiftround              " rounds indent to a multiple of shiftwidth
 set matchpairs+=<:>         " show matching <> (html mainly) as well
-set foldmethod=indent       " allow us to fold on indents
-set foldlevel=99            " don't fold by default
+set nolist
 
 " don't outdent hashes
 inoremap # #
@@ -218,11 +214,9 @@ set report=0                " : commands always print changed line count.
 set shortmess+=a            " Use [+]/[RO]/[w] for modified/readonly/written.
 set ruler                   " Show some info, even without statuslines.
 set laststatus=2            " Always show statusline, even if only 1 window.
-set statusline=[%l,%v\ %P%M]\ %f\ %r%h%w\ (%{&ff})\ %{fugitive#statusline()}
 
 " displays tabs with :set list & displays when a line runs off-screen
 set listchars=tab:>-,eol:$,trail:-,precedes:<,extends:>
-set list
 
 """ Searching and Patterns
 set ignorecase              " Default to using case insensitive searches,
@@ -232,19 +226,13 @@ set hlsearch                " Highlight searches by default.
 set incsearch               " Incrementally search while typing a /regex
 
 """" Display
-:autocmd ColorScheme * highlight ExtraWhitespace ctermbg=darkgreen guibg=darkgreen
 if has("gui_running")
+    colorscheme desert
     " Remove menu bar
     set guioptions-=m
 
     " Remove toolbar
     set guioptions-=T
-
-    " Set GUI font
-    set guifont=Bitstream\ Vera\ Sans\ Mono\ 14
-
-    " Set colorscheme
-    colorscheme molokai
 else
     colorscheme torte
 endif
@@ -253,7 +241,7 @@ endif
 map <leader>p "+p
 
 " Quit window on <leader>q
-"nnoremap <leader>q :q<CR>
+nnoremap <leader>q :q<CR>
 
 " hide matches on <leader>space
 nnoremap <leader><space> :nohlsearch<cr>
@@ -286,7 +274,6 @@ autocmd FileType html,xhtml,xml,css setlocal expandtab shiftwidth=2 tabstop=2 so
 "au BufRead *.py compiler nose
 au FileType python set omnifunc=pythoncomplete#Complete
 au FileType python setlocal expandtab shiftwidth=4 tabstop=8 softtabstop=4 smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class,with
-au FileType coffee setlocal expandtab shiftwidth=4 tabstop=8 softtabstop=4 smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class,with
 au BufRead *.py set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
 " Don't let pyflakes use the quickfix window
 let g:pyflakes_use_quickfix = 0
@@ -294,34 +281,19 @@ let g:pyflakes_use_quickfix = 0
 
 
 " Add the virtualenv's site-packages to vim path
-if has('python')
 py << EOF
-import os.path
-import sys
-import vim
 if 'VIRTUAL_ENV' in os.environ:
     project_base_dir = os.environ['VIRTUAL_ENV']
     sys.path.insert(0, project_base_dir)
     activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
     execfile(activate_this, dict(__file__=activate_this))
 EOF
-endif
 
 " Load up virtualenv's vimrc if it exists
 if filereadable($VIRTUAL_ENV . '/.vimrc')
     source $VIRTUAL_ENV/.vimrc
 endif
 
-if exists("&colorcolumn")
-   set colorcolumn=79
+if version >= 703
+    set colorcolumn=79
 endif
-
-set tags=./tags,/vobs/gsn/product/test/ttcn3/tags,/vobs/gsn/product/test/gtt/tags
-
-" Show tab in a smart way
-set list!
-:match ExtraWhitespace /[^\t]\zs\t\+/
-
-
-"highlight CursorLine guifg=none guibg=blue ctermfg=none ctermbg=lightblue
-highlight CursorColumn guifg=none guibg=darkblue ctermfg=none ctermbg=lightblue
