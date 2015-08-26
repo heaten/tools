@@ -1,0 +1,231 @@
+#!/proj/sgsn-tools/wh/bin/sgenv python
+
+'''
+###############################################################################
+# COPYRIGHT (C) ERICSSON AB 2013- All rights reserved.
+# The information in this document is the property of Ericsson.
+# Except as specifically authorized in writing by Ericsson,
+# the receiver of this document shall keep the information
+# contained herein confidential and shall protect the same in
+# whole or in part from disclosure and dissemination to third parties.
+# Disclosure and disseminations to the receiver's employees
+# shall only be made on a strict need to know basis. 
+###############################################################################
+'''
+#==============================================================================
+# IMPORTS
+#==============================================================================
+
+import os,sys
+import StringIO
+import re
+
+
+if not os.environ.has_key('GSN_WS_PACKAGES'):
+    ws_package = os.path.dirname(os.path.realpath(__file__))
+    os.environ['GSN_WS_PACKAGES'] = ws_package
+
+
+if (len(sys.argv) < 4) or (sys.argv[1] == "-h"):
+    print "Usage: {prog} <from-baseline> < <to-baseline> | <branch> > <src-components>".format(prog = sys.argv[0])
+    print " Will produce a patch (written to stdout) of all changes between baselines"
+    print " or between <from-baseline> and LATEST on branch"
+    exit(1)
+
+
+from gsn_packages.gsn_common import log
+from gsn_packages.gsn_vcs import vcs_clearcase
+
+# log.setLevel(5)
+
+from gsn_packages.gsn_proxy import clearcase
+
+class Version(object):
+    pass
+
+class Latest(Version):
+    def __init__(self, branch):
+        self._branch = branch
+
+    def __str__(self):
+        return self._branch
+
+    @property
+    def element(self):
+        return "brtype_sub({branch})".format(branch = self._branch)
+
+    @property
+    def branch(self):
+        return "brtype_sub({branch})".format(branch = self._branch)
+
+    @property
+    def version(self):
+        return "version(.../{branch}/LATEST)".format(branch = self._branch)
+
+class BuildLabel(Version):
+    def __init__(self, rev):
+        self._rev = rev
+
+    def __str__(self):
+        return self._rev
+
+    @property
+    def element(self):
+        return "lbtype_sub({label})".format(label=self._rev)
+
+    @property
+    def branch(self):
+        return "lbtype_sub({label})".format(label=self._rev)
+
+    @property
+    def version(self):
+        return "lbtype({label})".format(label=self._rev)
+
+
+class Baseline(object):
+    def __init__(self, label):
+        self.label = label
+        self._revs = RevInfo(BuildLabel(label))
+
+    def __str__(self):
+        return self.label
+
+    def rule(self):
+        BuildLabel(self._revs[name])
+
+
+class Branch(object):
+    def __init__(self, name):
+        self.name = name
+        self._baseline = None
+
+    def exists(self):
+        return None != self.baseline
+
+    @property
+    def baseline(self):
+        if not self._baseline:
+            self._baseline = vcs_clearcase.get_baseline_from_branch("ndpgsn_5_0", self.name)
+
+        return self._baseline
+
+    @property
+    def rule(self):
+        return Latest(self.name)
+
+class FileDB(file):
+    class NoVersion(Exception): pass
+    def __init__(self, fname, selector):
+        res = clearcase\
+                .cleartool('find', fname, '-version', selector.version, '-print')\
+                .assert_status(0)
+        self.version = res.output.strip()
+        if self.version = "":
+            raise NoVersion()
+        else:
+            super(FileDB, self).__init__(self.version)
+            
+    def 
+ 
+
+class RevInfo(dict):
+    def __init__(self, selector):
+        F = FileDB('/view/gsn_tools_view/vobs/gsn_autogsn/projects/ndpgsn_5_0/build_revisions.txt', selector)
+
+        pat = re.compile("^(src_\S+)\s+(\S+)(\s+\S+)?\n")
+
+        print "XXXXX Rev Info path: {}".format(F.name)
+
+        super(RevInfo, self).__init__([
+            tuple(pat.match(line).groups()[0:2])
+            for line in F
+            if pat.match(line)
+        ])
+
+class SourcePaths(dict):
+    def __init__(self, src):
+        F = FileDB('/view/gsn_tools_view/vobs/gsn_autogsn/projects/ndpgsn_5_0/src.txt', src.
+
+        pat = re.compile("^(src_\S+)\s+(\S+)(\s+\S+){2}\n")
+
+        print "XXXXX Source path: {}".format(res.output.strip())
+
+        super(SourcePaths, self).__init__([
+            tuple(pat.match(line).groups()[0:2])
+            for line in open(res.output.strip())
+            if pat.match(line)
+        ])
+                
+class Source(object):
+    def __init__(self, name, path, selector):
+        self.name = name
+        self._path = path
+        self.select = selector
+
+    def _get_version(self, fname, selector):
+        res = clearcase.cleartool('find', fname, '-version', selector.version, '-print')
+        if res.status == 0:
+            return res.output.strip()
+        else:
+            return None
+
+
+    def diff(self, fr):
+        diffs = clearcase\
+                .cleartool(
+                        "find", self._path, 
+                        "-all",
+                        "-element", '{to} || {fr}'.format(to = self.select.element, fr = fr.select.element),
+                        "-branch", '{to} || {fr}'.format(to = self.select.branch, fr = fr.select.branch),
+                        "-version", '( {to} && ! {fr} ) || ( ! {to} && {fr} )'.format(to = self.select.version, fr = fr.select.version),
+                        '-type', 'f',
+                        '-nxname', '-print'
+                    )\
+                .assert_status(0)
+
+        for fname in set(diffs.output.split()):
+            tver = self._get_version(fname, self.select)
+            fver = self._get_version(fname, fr.select)
+            # print "CHANGED: {}".format(fname)
+            # print " *  {}\n -> {}".format(fver, tver)
+
+
+            if not tver:
+                print "Only in from/{}: {}".format(os.path.dirname(fname), os.path.basename(fname))
+
+            elif not fver:
+                res = clearcase\
+                        .cleartool('diff', "/dev/null", tver)
+                # cant assert this exitivalue. they differ, so we have a exit 1
+                print res.output
+            else:
+                res = clearcase\
+                        .cleartool('diff', fver, tver)
+                # cant assert this exitivalue. they differ, so we have a exit 1
+                print res.output
+
+    def __str__(self):
+        return "<{} rev {} in {}>".format(self.name, self.select, self._path)
+        
+FROM = Branch(sys.argv[1])
+if not FROM.exists():
+    FROM = Baseline(sys.argv[1])
+from_path = SourcePaths(From)
+
+TO = Branch(sys.argv[2])
+if not TO.exists():
+    TO = Baseline(sys.argv[2])
+to_path = SourcePaths(TO)
+
+print "XXXX: FROM is a {}, TO is a {}".format(type(FROM), type(TO))
+
+for (fr,to) in [
+            (
+                Source(name, from_path[name], TO),
+                Source(name, to_path[name], FROM)
+            )
+            for name in sys.argv[3:]
+        ]:
+    to.diff(fr)
+
+
